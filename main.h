@@ -39,7 +39,7 @@ extern int timestamps[1000];
 extern int requests_size;
 
 #ifdef DEBUG
-#define debug(FORMAT, ...) printf("%c[%d;%dm [t:%d] [%d]: " FORMAT "%c[%d;%dm\n", 27, (1 + (rank / 7)) % 2, 31 + (6 + rank) % 7, l_clock, rank, ##__VA_ARGS__, 27, 0, 37);
+#define debug(FORMAT, ...) printf("%c[%d;%dm [t:%d] [%d] [m: %d/%d] [x:%d/%d]: " FORMAT "%c[%d;%dm\n", 27, (1 + (rank / 7)) % 2, 31 + (6 + rank) % 7, l_clock, rank, m, M, x, X, ##__VA_ARGS__, 27, 0, 37);
 #else
 #define debug(...) ;
 #endif

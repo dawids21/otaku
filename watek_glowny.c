@@ -1,7 +1,7 @@
 #include "main.h"
 #include "watek_glowny.h"
 
-int cmpfunc(const void *a, const void *b)
+static int cmpfunc(const void *a, const void *b)
 {
 	packet_t **packet_a = (packet_t **)a;
 	packet_t **packet_b = (packet_t **)b;
@@ -14,67 +14,68 @@ void mainLoop()
 	int tag;
 	int perc;
 
-	while (stan != InFinish)
-	{
-		switch (stan)
-		{
-		case InRun:
-			perc = random() % 100;
-			if (perc < 25)
-			{
-				debug("Perc: %d", perc);
-				println("Ubiegam się o sekcję krytyczną")
-					debug("Zmieniam stan na wysyłanie");
-				packet_t *pkt = malloc(sizeof(packet_t));
-				pkt->data = perc;
-				ackCount = 0;
-				for (int i = 0; i <= size - 1; i++)
-					if (i != rank)
-						sendPacket(pkt, i, REQUEST);
-				changeState(InWant);
-				free(pkt);
-			}
-			debug("Skończyłem myśleć");
-			break;
-		case InWant:
-			println("Czekam na wejście do sekcji krytycznej")
-				// tutaj zapewne jakiś muteks albo zmienna warunkowa
-				// bo aktywne czekanie jest BUE
-				if (ackCount == size - 1)
-					changeState(InSection);
-			break;
-		case InSection:
-			// tutaj zapewne jakiś muteks albo zmienna warunkowa
-			println("Jestem w sekcji krytycznej")
-				sleep(5);
-			// if ( perc < 25 ) {
-			debug("Perc: %d", perc);
-			println("Wychodzę z sekcji krytyczneh")
-				debug("Zmieniam stan na wysyłanie");
-			packet_t *pkt = malloc(sizeof(packet_t));
-			pkt->data = perc;
-			for (int i = 0; i <= size - 1; i++)
-				if (i != rank)
-					sendPacket(pkt, (rank + 1) % size, RELEASE);
-			changeState(InRun);
-			free(pkt);
-			//}
-			break;
-		default:
-			break;
-		}
-		sleep(SEC_IN_STATE);
-	}
+	// while (stan != InFinish)
+	// {
+	// 	switch (stan)
+	// 	{
+	// 	case InRun:
+	// 		perc = random() % 100;
+	// 		if (perc < 25)
+	// 		{
+	// 			debug("Perc: %d", perc);
+	// 			println("Ubiegam się o sekcję krytyczną")
+	// 				debug("Zmieniam stan na wysyłanie");
+	// 			packet_t *pkt = malloc(sizeof(packet_t));
+	// 			pkt->data = perc;
+	// 			ackCount = 0;
+	// 			for (int i = 0; i <= size - 1; i++)
+	// 				if (i != rank)
+	// 					sendPacket(pkt, i, REQUEST);
+	// 			changeState(InWant);
+	// 			free(pkt);
+	// 		}
+	// 		debug("Skończyłem myśleć");
+	// 		break;
+	// 	case InWant:
+	// 		println("Czekam na wejście do sekcji krytycznej")
+	// 			// tutaj zapewne jakiś muteks albo zmienna warunkowa
+	// 			// bo aktywne czekanie jest BUE
+	// 			if (ackCount == size - 1)
+	// 				changeState(InSection);
+	// 		break;
+	// 	case InSection:
+	// 		// tutaj zapewne jakiś muteks albo zmienna warunkowa
+	// 		println("Jestem w sekcji krytycznej")
+	// 			sleep(5);
+	// 		// if ( perc < 25 ) {
+	// 		debug("Perc: %d", perc);
+	// 		println("Wychodzę z sekcji krytyczneh")
+	// 			debug("Zmieniam stan na wysyłanie");
+	// 		packet_t *pkt = malloc(sizeof(packet_t));
+	// 		pkt->data = perc;
+	// 		for (int i = 0; i <= size - 1; i++)
+	// 			if (i != rank)
+	// 				sendPacket(pkt, (rank + 1) % size, RELEASE);
+	// 		changeState(InRun);
+	// 		free(pkt);
+	// 		//}
+	// 		break;
+	// 	default:
+	// 		break;
+	// 	}
+	// 	sleep(SEC_IN_STATE);
+	// }
 
 	while (state_new != IN_FINISH)
 	{
+		sleep(1);
 		int x_without_us;
 		int x_with_us;
 		switch (state_new)
 		{
 		case CANT_GO_DONT_WANT:
 		{
-			l_clock++;
+				l_clock++;
 			packet_t *pkt = malloc(sizeof(packet_t));
 			pkt->data = m;
 			for (int i = 0; i <= size - 1; i++)
@@ -84,17 +85,19 @@ void mainLoop()
 					sendPacket(pkt, i, REQUEST);
 				}
 			}
-			free(pkt);
+			pthread_mutex_lock(&requests_mut);
 			requests[requests_size] = pkt;
 			requests_size++;
 			qsort(requests, requests_size, sizeof(packet_t *), cmpfunc);
+			pthread_mutex_unlock(&requests_mut);
 			l_clock_req = l_clock;
 			changeStateNew(CANT_GO_DO_WANT);
 			break;
 		}
 		case CANT_GO_DO_WANT:
 		{
-
+			debug("ubiegam sie o wejscie");
+			pthread_mutex_lock(&timestamps_mut);
 			for (int i = 0; i < size; i++)
 			{
 				if (timestamps[i] <= l_clock_req)
@@ -102,6 +105,7 @@ void mainLoop()
 					break;
 				}
 			}
+			pthread_mutex_unlock(&timestamps_mut);
 			int req_count = 0;
 			int m_sum = 0;
 			for (int i = 0; i < requests_size; i++)
@@ -129,6 +133,7 @@ void mainLoop()
 		}
 		case CAN_GO:
 		{
+			debug("wchodze");
 			x_without_us = x;
 			int m_sum = 0;
 			for (int i = 0; i < requests_size; i++)
@@ -157,6 +162,7 @@ void mainLoop()
 		}
 		case INSIDE_X_OK:
 		{
+			debug("jestem w srodku x ok");
 			sleep(random() % 5);
 			pthread_mutex_lock(&l_clock_mut);
 			l_clock = l_clock + 1;
@@ -173,13 +179,15 @@ void mainLoop()
 			free(pkt);
 			m += random() % max_random_m;
 			changeStateNew(CANT_GO_DONT_WANT);
+			debug("wychodze");
 			break;
 		}
 		case INSIDE_X_NO_OK:
 		{
 			if (x_without_us < X)
 			{
-				sleep(random() % 5);
+				debug("jestem w srodku wymieniam x")
+					sleep(random() % 5);
 				pthread_mutex_lock(&l_clock_mut);
 				l_clock = l_clock + 1;
 				pthread_mutex_unlock(&l_clock_mut);

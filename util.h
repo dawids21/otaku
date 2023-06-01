@@ -49,6 +49,8 @@ extern state_t stan;
 extern state_t_new state_new;
 extern pthread_mutex_t stateMut;
 extern pthread_mutex_t l_clock_mut; // mutex, broni dostępu do zmiennej zegara
+extern pthread_mutex_t timestamps_mut; // mutex, broni dostępu do zmiennej zegara
+extern pthread_mutex_t requests_mut; // mutex, broni dostępu do zmiennej zegara
 
 /* zmiana stanu, obwarowana muteksem */
 void changeState(state_t);

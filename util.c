@@ -17,6 +17,8 @@ state_t_new state_new = CANT_GO_DONT_WANT;
  */
 pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t l_clock_mut = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t timestamps_mut = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t requests_mut = PTHREAD_MUTEX_INITIALIZER;
 
 struct tagNames_t
 {
@@ -58,12 +60,12 @@ void inicjuj_typ_pakietu()
 /* opis patrz util.h */
 void sendPacket(packet_t *pkt, int destination, int tag)
 {
-    int freepkt = 0;
-    if (pkt == 0)
-    {
-        pkt = malloc(sizeof(packet_t));
-        freepkt = 1;
-    }
+    // int freepkt = 0;
+    // if (pkt == 0)
+    // {
+    //     pkt = malloc(sizeof(packet_t));
+    //     freepkt = 1;
+    // }
     pthread_mutex_lock(&l_clock_mut);
     l_clock++;
     pkt->src = rank;
@@ -71,8 +73,8 @@ void sendPacket(packet_t *pkt, int destination, int tag)
     pthread_mutex_unlock(&l_clock_mut);
     MPI_Send(pkt, 1, MPI_PAKIET_T, destination, tag, MPI_COMM_WORLD);
     debug("Wysyłam %s do %d\n", tag2string(tag), destination);
-    if (freepkt)
-        free(pkt);
+    // if (freepkt)
+    //     free(pkt);
 }
 
 void changeState(state_t newState)
@@ -89,7 +91,6 @@ void changeState(state_t newState)
 
 void changeStateNew(state_t_new newState)
 {
-
     pthread_mutex_lock(&stateMut);
     if (state_new == IN_FINISH)
     {
