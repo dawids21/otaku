@@ -15,7 +15,19 @@ int rank, size;
 int ackCount = 0;
 int l_clock = 0;
 sem_t l_clock_sem;
-/* 
+int l_clock_req = 0;
+
+int M = 50;
+int m;
+int X = 120;
+int S = 8;
+
+packet_t *requests[1000];
+int timestamps[1000];
+
+int requests_size = 0;
+
+/*
  * Każdy proces ma dwa wątki - główny i komunikacyjny
  * w plikach, odpowiednio, watek_glowny.c oraz (siurpryza) watek_komunikacyjny.c
  *
@@ -26,10 +38,10 @@ pthread_t threadKom;
 
 void finalizuj()
 {
-    pthread_mutex_destroy( &stateMut);
+    pthread_mutex_destroy(&stateMut);
     /* Czekamy, aż wątek potomny się zakończy */
-    println("czekam na wątek \"komunikacyjny\"\n" );
-    pthread_join(threadKom,NULL);
+    println("czekam na wątek \"komunikacyjny\"\n");
+    pthread_join(threadKom, NULL);
     MPI_Type_free(&MPI_PAKIET_T);
     MPI_Finalize();
     sem_destroy(&l_clock_sem);
@@ -39,17 +51,17 @@ void finalizuj()
 // {
 //     printf("THREAD SUPPORT: chcemy %d. Co otrzymamy?\n", provided);
 //     switch (provided) {
-//         case MPI_THREAD_SINGLE: 
+//         case MPI_THREAD_SINGLE:
 //             printf("Brak wsparcia dla wątków, kończę\n");
 //             /* Nie ma co, trzeba wychodzić */
 // 	    fprintf(stderr, "Brak wystarczającego wsparcia dla wątków - wychodzę!\n");
 // 	    MPI_Finalize();
 // 	    exit(-1);
 // 	    break;
-//         case MPI_THREAD_FUNNELED: 
+//         case MPI_THREAD_FUNNELED:
 //             printf("tylko te wątki, ktore wykonaly mpi_init_thread mogą wykonać wołania do biblioteki mpi\n");
 // 	    break;
-//         case MPI_THREAD_SERIALIZED: 
+//         case MPI_THREAD_SERIALIZED:
 //             /* Potrzebne zamki wokół wywołań biblioteki MPI */
 //             printf("tylko jeden watek naraz może wykonać wołania do biblioteki MPI\n");
 // 	    break;
@@ -58,7 +70,6 @@ void finalizuj()
 //         default: printf("Nikt nic nie wie\n");
 //     }
 // }
-
 
 int main(int argc, char **argv)
 {
@@ -71,12 +82,13 @@ int main(int argc, char **argv)
     inicjuj_typ_pakietu(); // tworzy typ pakietu
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    m = M / size;
     // startKomWatek w watek_komunikacyjny.c
-    pthread_create( &threadKom, NULL, startKomWatek , 0);
+    pthread_create(&threadKom, NULL, startKomWatek, 0);
 
     mainLoop();
-    
+
     finalizuj();
     return 0;
 }
-
