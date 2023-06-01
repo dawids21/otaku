@@ -12,7 +12,7 @@ void *startKomWatek(void *ptr)
     {
         debug("czekam na recv");
         MPI_Recv(&pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-        sem_wait(&l_clock_sem);
+        pthread_mutex_lock(&l_clock_mut);
         if (pakiet.ts > l_clock)
         {
             l_clock = pakiet.ts + 1;
@@ -21,7 +21,7 @@ void *startKomWatek(void *ptr)
         {
             l_clock++;
         }
-        sem_post(&l_clock_sem);
+        pthread_mutex_unlock(&l_clock_mut);
 
         switch (status.MPI_TAG)
         {

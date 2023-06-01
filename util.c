@@ -16,6 +16,7 @@ state_t_new state_new = CANT_GO_DONT_WANT;
  * być obwarowany muteksami
  */
 pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t l_clock_mut = PTHREAD_MUTEX_INITIALIZER;
 
 struct tagNames_t
 {
@@ -63,11 +64,11 @@ void sendPacket(packet_t *pkt, int destination, int tag)
         pkt = malloc(sizeof(packet_t));
         freepkt = 1;
     }
-    sem_wait(&l_clock_sem);
+    pthread_mutex_lock(&l_clock_mut);
     l_clock++;
     pkt->src = rank;
     pkt->ts = l_clock;
-    sem_post(&l_clock_sem);
+    pthread_mutex_unlock(&l_clock_mut);
     MPI_Send(pkt, 1, MPI_PAKIET_T, destination, tag, MPI_COMM_WORLD);
     debug("Wysyłam %s do %d\n", tag2string(tag), destination);
     if (freepkt)

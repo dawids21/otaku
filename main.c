@@ -14,13 +14,14 @@
 int rank, size;
 int ackCount = 0;
 int l_clock = 0;
-sem_t l_clock_sem;
 int l_clock_req = 0;
 
 int M = 50;
 int m;
+int x = 0;
 int X = 120;
 int S = 8;
+int max_random_m = 10;
 
 packet_t *requests[1000];
 int timestamps[1000];
@@ -39,12 +40,12 @@ pthread_t threadKom;
 void finalizuj()
 {
     pthread_mutex_destroy(&stateMut);
+    pthread_mutex_destroy(&l_clock_mut);
     /* Czekamy, aż wątek potomny się zakończy */
     println("czekam na wątek \"komunikacyjny\"\n");
     pthread_join(threadKom, NULL);
     MPI_Type_free(&MPI_PAKIET_T);
     MPI_Finalize();
-    sem_destroy(&l_clock_sem);
 }
 
 // void check_thread_support(int provided)
@@ -73,7 +74,6 @@ void finalizuj()
 
 int main(int argc, char **argv)
 {
-    sem_init(&l_clock_sem, 0, 1);
     MPI_Status status;
     int provided;
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);

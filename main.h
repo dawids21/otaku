@@ -23,15 +23,16 @@ extern int size;
 extern int ackCount;
 extern pthread_t threadKom;
 extern int l_clock;       // zegar
-extern sem_t l_clock_sem; // semafor, broni dostępu do zmiennej zegara
 extern int l_clock_req;
 
 extern sem_t sem;
 
 extern int m;
+extern int x;
 extern int X;
 extern int M;
 extern int S;
+extern int max_random_m;
 extern packet_t *requests[1000];
 extern int timestamps[1000];
 

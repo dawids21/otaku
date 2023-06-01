@@ -68,9 +68,12 @@ void mainLoop()
 
 	while (state_new != IN_FINISH)
 	{
+		int x_without_us;
+		int x_with_us;
 		switch (state_new)
 		{
 		case CANT_GO_DONT_WANT:
+		{
 			l_clock++;
 			packet_t *pkt = malloc(sizeof(packet_t));
 			pkt->data = m;
@@ -81,13 +84,17 @@ void mainLoop()
 					sendPacket(pkt, i, REQUEST);
 				}
 			}
+			free(pkt);
 			requests[requests_size] = pkt;
 			requests_size++;
 			qsort(requests, requests_size, sizeof(packet_t *), cmpfunc);
 			l_clock_req = l_clock;
 			changeStateNew(CANT_GO_DO_WANT);
 			break;
+		}
 		case CANT_GO_DO_WANT:
+		{
+
 			for (int i = 0; i < size; i++)
 			{
 				if (timestamps[i] <= l_clock_req)
@@ -113,6 +120,87 @@ void mainLoop()
 			{
 				break;
 			}
+			if (m_sum >= M - m)
+			{
+				break;
+			}
+			changeStateNew(CAN_GO);
+			break;
+		}
+		case CAN_GO:
+		{
+			x_without_us = x;
+			int m_sum = 0;
+			for (int i = 0; i < requests_size; i++)
+			{
+				if (requests[i]->src != rank)
+				{
+					m_sum += requests[i]->data;
+				}
+				else
+				{
+					break;
+				}
+			}
+			x_without_us += m_sum;
+			x_with_us = x_without_us + m;
+			if (x_with_us <= X)
+			{
+				changeStateNew(INSIDE_X_OK);
+				break;
+			}
+			else
+			{
+				changeStateNew(INSIDE_X_NO_OK);
+				break;
+			}
+		}
+		case INSIDE_X_OK:
+		{
+			sleep(random() % 5);
+			pthread_mutex_lock(&l_clock_mut);
+			l_clock = l_clock + 1;
+			pthread_mutex_unlock(&l_clock_mut);
+			packet_t *pkt = malloc(sizeof(packet_t));
+			pkt->data = m;
+			for (int i = 0; i <= size - 1; i++)
+			{
+				if (i != rank)
+				{
+					sendPacket(pkt, i, RELEASE);
+				}
+			}
+			free(pkt);
+			m += random() % max_random_m;
+			changeStateNew(CANT_GO_DONT_WANT);
+			break;
+		}
+		case INSIDE_X_NO_OK:
+		{
+			if (x_without_us < X)
+			{
+				sleep(random() % 5);
+				pthread_mutex_lock(&l_clock_mut);
+				l_clock = l_clock + 1;
+				pthread_mutex_unlock(&l_clock_mut);
+				packet_t *pkt = malloc(sizeof(packet_t));
+				pkt->data = x_without_us + m;
+				for (int i = 0; i <= size - 1; i++)
+				{
+					if (i != rank)
+					{
+						sendPacket(pkt, i, REPLACE);
+					}
+				}
+				free(pkt);
+				changeStateNew(CAN_GO);
+			}
+			else
+			{
+				changeStateNew(CAN_GO);
+			}
+			break;
+		}
 		}
 	}
 }
