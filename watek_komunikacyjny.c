@@ -40,19 +40,16 @@ void *startKomWatek(void *ptr)
         {
         case REQUEST:
             pthread_mutex_lock(&requests_mut);
+            pthread_mutex_lock(&l_clock_mut);
             requests[requests_size] = pkt;
 			requests_size++;
 			qsort(requests, requests_size, sizeof(packet_t *), cmpfunc);
-            pthread_mutex_unlock(&requests_mut);
             l_clock += 1;
+            pthread_mutex_unlock(&l_clock_mut);
+            pthread_mutex_unlock(&requests_mut);
             packet_t *pkt2 = malloc(sizeof(packet_t));
-            for (int i = 0; i <= size - 1; i++)
-            {
-                if (i != rank)
-                {
-                    sendPacket(pkt2, i, ACK);
-                }
-            }
+            sendPacket(pkt2, pkt->src, ACK);
+            free(pkt2);
             break;
         case RELEASE:
             pthread_mutex_lock(&requests_mut);
@@ -61,14 +58,15 @@ void *startKomWatek(void *ptr)
             {
                 index_of_request++;
             }
-            free(requests[index_of_request]);
+            packet_t *request_to_free = requests[index_of_request];
             for (int i = index_of_request + 1; i < requests_size; i++)
             {
                 requests[i] = requests[i - 1];
             }
             requests_size--;
             pthread_mutex_unlock(&requests_mut);
-            x -= pkt->data;
+            x += pkt->data;
+            free(request_to_free);
             break;
         case REPLACE:
             x -= pkt->data;

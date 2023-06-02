@@ -134,6 +134,7 @@ void mainLoop()
 		case CAN_GO:
 		{
 			debug("wchodze");
+			pthread_mutex_lock(&requests_mut);
 			x_without_us = x;
 			int m_sum = 0;
 			for (int i = 0; i < requests_size; i++)
@@ -147,6 +148,7 @@ void mainLoop()
 					break;
 				}
 			}
+			pthread_mutex_unlock(&requests_mut);
 			x_without_us += m_sum;
 			x_with_us = x_without_us + m;
 			if (x_with_us <= X)
@@ -171,10 +173,7 @@ void mainLoop()
 			pkt->data = m;
 			for (int i = 0; i <= size - 1; i++)
 			{
-				if (i != rank)
-				{
 					sendPacket(pkt, i, RELEASE);
-				}
 			}
 			free(pkt);
 			m += random() % max_random_m;
@@ -186,7 +185,7 @@ void mainLoop()
 		{
 			if (x_without_us < X)
 			{
-				debug("jestem w srodku wymieniam x")
+				debug("jestem w srodku wymieniam x");
 					sleep(random() % 5);
 				pthread_mutex_lock(&l_clock_mut);
 				l_clock = l_clock + 1;
@@ -195,10 +194,7 @@ void mainLoop()
 				pkt->data = x_without_us + m;
 				for (int i = 0; i <= size - 1; i++)
 				{
-					if (i != rank)
-					{
 						sendPacket(pkt, i, REPLACE);
-					}
 				}
 				free(pkt);
 				changeStateNew(CAN_GO);
