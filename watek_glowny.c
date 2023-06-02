@@ -80,16 +80,8 @@ void mainLoop()
 			pkt->data = m;
 			for (int i = 0; i <= size - 1; i++)
 			{
-				if (i != rank)
-				{
 					sendPacket(pkt, i, REQUEST);
 				}
-			}
-			pthread_mutex_lock(&requests_mut);
-			requests[requests_size] = pkt;
-			requests_size++;
-			qsort(requests, requests_size, sizeof(packet_t *), cmpfunc);
-			pthread_mutex_unlock(&requests_mut);
 			l_clock_req = l_clock;
 			changeStateNew(CANT_GO_DO_WANT);
 			break;

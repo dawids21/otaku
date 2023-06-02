@@ -13,10 +13,10 @@ void *startKomWatek(void *ptr)
 {
     MPI_Status status;
     int is_message = FALSE;
-    packet_t *pkt = malloc(sizeof(packet_t));
     /* Obrazuje pętlę odbierającą pakiety o różnych typach */
     while (state_new != IN_FINISH)
     {
+        packet_t *pkt = malloc(sizeof(packet_t));
         debug("czekam na recv");
         MPI_Recv(pkt, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
         pthread_mutex_lock(&l_clock_mut);
@@ -41,13 +41,17 @@ void *startKomWatek(void *ptr)
         case REQUEST:
             pthread_mutex_lock(&requests_mut);
             pthread_mutex_lock(&l_clock_mut);
-            requests[requests_size] = pkt;
+            packet_t *pkt2 = malloc(sizeof(packet_t));
+            pkt2->ts = pkt->ts;
+            pkt2->src = pkt->src;
+            pkt2->data = pkt->data;
+            requests[requests_size] = pkt2;
 			requests_size++;
 			qsort(requests, requests_size, sizeof(packet_t *), cmpfunc);
             l_clock += 1;
             pthread_mutex_unlock(&l_clock_mut);
             pthread_mutex_unlock(&requests_mut);
-            packet_t *pkt2 = malloc(sizeof(packet_t));
+            pkt2 = malloc(sizeof(packet_t));
             sendPacket(pkt2, pkt->src, ACK);
             free(pkt2);
             break;
@@ -73,32 +77,4 @@ void *startKomWatek(void *ptr)
             break;
         }
     }
-    // while (stan != InFinish)
-    //     {
-    //     MPI_Recv(&pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-    //     pthread_mutex_lock(&l_clock_mut);
-    //     if (pakiet.ts > l_clock)
-    //     {
-    //         l_clock = pakiet.ts + 1;
-    //     }
-    //     else
-    //     {
-    //         l_clock++;
-    //     }
-    //     pthread_mutex_unlock(&l_clock_mut);
-
-    //     switch (status.MPI_TAG)
-    //     {
-    //     case REQUEST:
-    //         debug("Ktoś coś prosi. A niech ma!")
-    //             sendPacket(0, status.MPI_SOURCE, ACK);
-    //         break;
-    //     case ACK:
-    //         debug("Dostałem ACK od %d, mam już %d", status.MPI_SOURCE, ackCount);
-    //         ackCount++; /* czy potrzeba tutaj muteksa? Będzie wyścig, czy nie będzie? Zastanówcie się. */
-    //         break;
-    //     default:
-    //         break;
-    //     }
-    //     }
 }
