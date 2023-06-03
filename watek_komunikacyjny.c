@@ -12,7 +12,6 @@ static int cmpfunc(const void *a, const void *b)
 void *startKomWatek(void *ptr)
 {
     MPI_Status status;
-    int is_message = FALSE;
     /* Obrazuje pętlę odbierającą pakiety o różnych typach */
     while (state_new != IN_FINISH)
     {
@@ -76,5 +75,6 @@ void *startKomWatek(void *ptr)
             x -= pkt->data;
             break;
         }
+        free(pkt);
     }
 }

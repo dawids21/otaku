@@ -90,14 +90,20 @@ void mainLoop()
 		{
 			debug("ubiegam sie o wejscie");
 			pthread_mutex_lock(&timestamps_mut);
+			int should_break = FALSE;
 			for (int i = 0; i < size; i++)
 			{
-				if (timestamps[i] <= l_clock_req)
+				if (i != rank && timestamps[i] <= l_clock_req)
 				{
+					should_break = TRUE;
 					break;
 				}
 			}
 			pthread_mutex_unlock(&timestamps_mut);
+			if (should_break)
+			{
+				break;
+			}
 			int req_count = 0;
 			int m_sum = 0;
 			for (int i = 0; i < requests_size; i++)
