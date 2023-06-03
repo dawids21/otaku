@@ -41,6 +41,10 @@ void finalizuj()
 {
     pthread_mutex_destroy(&stateMut);
     pthread_mutex_destroy(&l_clock_mut);
+    pthread_mutex_destroy(&timestamps_mut);
+    pthread_mutex_destroy(&requests_mut);
+    pthread_mutex_destroy(&new_message_mut);
+    pthread_cond_destroy(&new_message_cond);
     /* Czekamy, aż wątek potomny się zakończy */
     println("czekam na wątek \"komunikacyjny\"\n");
     pthread_join(threadKom, NULL);

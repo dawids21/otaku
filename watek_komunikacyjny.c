@@ -26,6 +26,10 @@ void *startKomWatek(void *ptr)
             pthread_cond_wait(&new_message_cond, &new_message_mut);
         }
         pthread_mutex_unlock(&new_message_mut);
+        if (state_new == IN_FINISH)
+        {
+            break;
+        }
         packet_t *pkt = malloc(sizeof(packet_t));
         debug("czekam na recv");
         MPI_Recv(pkt, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -75,7 +79,7 @@ void *startKomWatek(void *ptr)
             packet_t *request_to_free = requests[index_of_request];
             for (int i = index_of_request + 1; i < requests_size; i++)
             {
-                requests[i] = requests[i - 1];
+                requests[i - 1] = requests[i];
             }
             requests_size--;
             pthread_mutex_unlock(&requests_mut);

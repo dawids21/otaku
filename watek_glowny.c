@@ -176,6 +176,12 @@ void mainLoop()
 				}
 				free(pkt);
 				m += random() % max_random_m;
+				if (m > M)
+				{
+					changeStateNew(IN_FINISH);
+					debug("koncze");
+					break;
+				}
 				changeStateNew(CANT_GO_DONT_WANT);
 				debug("wychodze");
 				break;
