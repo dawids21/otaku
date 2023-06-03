@@ -41,8 +41,6 @@ typedef enum
     CANT_GO_DONT_WANT,
     CANT_GO_DO_WANT,
     CAN_GO,
-    INSIDE_X_OK,
-    INSIDE_X_NO_OK,
     IN_FINISH
 } state_t_new;
 extern state_t stan;

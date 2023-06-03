@@ -163,57 +163,42 @@ void mainLoop()
 			x_with_us = x_without_us + m;
 			if (x_with_us <= X)
 			{
-				changeStateNew(INSIDE_X_OK);
-				break;
-			}
-			else
-			{
-				changeStateNew(INSIDE_X_NO_OK);
-				break;
-			}
-		}
-		case INSIDE_X_OK:
-		{
-			debug("jestem w srodku x ok");
-			sleep(random() % 5);
-			pthread_mutex_lock(&l_clock_mut);
-			l_clock = l_clock + 1;
-			pthread_mutex_unlock(&l_clock_mut);
-			packet_t *pkt = malloc(sizeof(packet_t));
-			pkt->data = m;
-			for (int i = 0; i <= size - 1; i++)
-			{
-				sendPacket(pkt, i, RELEASE);
-			}
-			free(pkt);
-			m += random() % max_random_m;
-			changeStateNew(CANT_GO_DONT_WANT);
-			debug("wychodze");
-			break;
-		}
-		case INSIDE_X_NO_OK:
-		{
-			if (x_without_us < X)
-			{
-				debug("jestem w srodku wymieniam x");
+				debug("jestem w srodku x ok");
 				sleep(random() % 5);
 				pthread_mutex_lock(&l_clock_mut);
 				l_clock = l_clock + 1;
 				pthread_mutex_unlock(&l_clock_mut);
 				packet_t *pkt = malloc(sizeof(packet_t));
-				pkt->data = x_without_us + m;
+				pkt->data = m;
 				for (int i = 0; i <= size - 1; i++)
 				{
-					sendPacket(pkt, i, REPLACE);
+					sendPacket(pkt, i, RELEASE);
 				}
 				free(pkt);
-				changeStateNew(CAN_GO);
+				m += random() % max_random_m;
+				changeStateNew(CANT_GO_DONT_WANT);
+				debug("wychodze");
+				break;
 			}
 			else
 			{
-				changeStateNew(CAN_GO);
+				if (x_without_us < X)
+				{
+					debug("jestem w srodku wymieniam x");
+					sleep(random() % 5);
+					pthread_mutex_lock(&l_clock_mut);
+					l_clock = l_clock + 1;
+					pthread_mutex_unlock(&l_clock_mut);
+					packet_t *pkt = malloc(sizeof(packet_t));
+					pkt->data = x_without_us + m;
+					for (int i = 0; i <= size - 1; i++)
+					{
+						sendPacket(pkt, i, REPLACE);
+					}
+					free(pkt);
+				}
+				break;
 			}
-			break;
 		}
 		}
 		pthread_mutex_lock(&new_message_mut);
