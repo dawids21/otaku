@@ -51,8 +51,8 @@ void *startKomWatek(void *ptr)
             pkt2->src = pkt->src;
             pkt2->data = pkt->data;
             requests[requests_size] = pkt2;
-			requests_size++;
-			qsort(requests, requests_size, sizeof(packet_t *), cmpfunc);
+            requests_size++;
+            qsort(requests, requests_size, sizeof(packet_t *), cmpfunc);
             l_clock += 1;
             pthread_mutex_unlock(&l_clock_mut);
             pthread_mutex_unlock(&requests_mut);
