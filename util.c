@@ -19,6 +19,9 @@ pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t l_clock_mut = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t timestamps_mut = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t requests_mut = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t new_message_mut = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t new_message_cond = PTHREAD_COND_INITIALIZER;
+int new_message = TRUE;
 
 struct tagNames_t
 {

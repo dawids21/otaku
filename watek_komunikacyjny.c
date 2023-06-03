@@ -15,6 +15,12 @@ void *startKomWatek(void *ptr)
     /* Obrazuje pętlę odbierającą pakiety o różnych typach */
     while (state_new != IN_FINISH)
     {
+        pthread_mutex_lock(&new_message_mut);
+        while (new_message == TRUE)
+        {
+            pthread_cond_wait(&new_message_cond, &new_message_mut);
+        }
+        pthread_mutex_unlock(&new_message_mut);
         packet_t *pkt = malloc(sizeof(packet_t));
         debug("czekam na recv");
         MPI_Recv(pkt, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -76,5 +82,9 @@ void *startKomWatek(void *ptr)
             break;
         }
         free(pkt);
+        pthread_mutex_lock(&new_message_mut);
+        new_message = TRUE;
+        pthread_cond_signal(&new_message_cond);
+        pthread_mutex_unlock(&new_message_mut);
     }
 }

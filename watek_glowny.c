@@ -65,10 +65,17 @@ void mainLoop()
 	// 	}
 	// 	sleep(SEC_IN_STATE);
 	// }
-
+	state_t_new previous_state = CANT_GO_DONT_WANT;
 	while (state_new != IN_FINISH)
 	{
 		sleep(1);
+		pthread_mutex_lock(&new_message_mut);
+		while (new_message == FALSE && state_new == previous_state)
+		{
+			pthread_cond_wait(&new_message_cond, &new_message_mut);
+		}
+		previous_state = state_new;
+		pthread_mutex_unlock(&new_message_mut);
 		int x_without_us;
 		int x_with_us;
 		switch (state_new)
@@ -204,5 +211,9 @@ void mainLoop()
 			break;
 		}
 		}
+		pthread_mutex_lock(&new_message_mut);
+		new_message = FALSE;
+		pthread_cond_signal(&new_message_cond);
+		pthread_mutex_unlock(&new_message_mut);
 	}
 }
