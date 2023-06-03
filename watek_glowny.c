@@ -5,7 +5,12 @@ static int cmpfunc(const void *a, const void *b)
 {
 	packet_t **packet_a = (packet_t **)a;
 	packet_t **packet_b = (packet_t **)b;
-	return (*packet_a)->ts - (*packet_b)->ts;
+	int diff_ts = (*packet_a)->ts - (*packet_b)->ts;
+	if (diff_ts != 0)
+	{
+		return diff_ts;
+	}
+	return (*packet_a)->src - (*packet_b)->src;
 }
 
 void mainLoop()
