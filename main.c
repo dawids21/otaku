@@ -19,9 +19,9 @@ int l_clock_req = 0;
 int M = 50;
 int m;
 int x = 0;
-int X = 120;
-int S = 8;
-int max_random_m = 10;
+int X = 90;
+int S = 2;
+int max_random_m = 20;
 
 packet_t *requests[1000];
 int timestamps[1000];
@@ -45,7 +45,6 @@ void finalizuj()
     pthread_mutex_destroy(&requests_mut);
     pthread_mutex_destroy(&new_message_mut);
     pthread_cond_destroy(&new_message_cond);
-    /* Czekamy, aż wątek potomny się zakończy */
     println("czekam na wątek \"komunikacyjny\"\n");
     pthread_join(threadKom, NULL);
     MPI_Type_free(&MPI_PAKIET_T);
@@ -83,12 +82,11 @@ int main(int argc, char **argv)
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
     // check_thread_support(provided);
     srand(rank);
-    inicjuj_typ_pakietu(); // tworzy typ pakietu
+    inicjuj_typ_pakietu();
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     m = M / size;
-    // startKomWatek w watek_komunikacyjny.c
     pthread_create(&threadKom, NULL, startKomWatek, 0);
 
     mainLoop();

@@ -1,79 +1,12 @@
 #include "main.h"
 #include "watek_glowny.h"
 
-static int cmpfunc(const void *a, const void *b)
-{
-	packet_t **packet_a = (packet_t **)a;
-	packet_t **packet_b = (packet_t **)b;
-	int diff_ts = (*packet_a)->ts - (*packet_b)->ts;
-	if (diff_ts != 0)
-	{
-		return diff_ts;
-	}
-	return (*packet_a)->src - (*packet_b)->src;
-}
-
 void mainLoop()
 {
-	srandom(rank);
-	int tag;
-	int perc;
-
-	// while (stan != InFinish)
-	// {
-	// 	switch (stan)
-	// 	{
-	// 	case InRun:
-	// 		perc = random() % 100;
-	// 		if (perc < 25)
-	// 		{
-	// 			debug("Perc: %d", perc);
-	// 			println("Ubiegam się o sekcję krytyczną")
-	// 				debug("Zmieniam stan na wysyłanie");
-	// 			packet_t *pkt = malloc(sizeof(packet_t));
-	// 			pkt->data = perc;
-	// 			ackCount = 0;
-	// 			for (int i = 0; i <= size - 1; i++)
-	// 				if (i != rank)
-	// 					sendPacket(pkt, i, REQUEST);
-	// 			changeState(InWant);
-	// 			free(pkt);
-	// 		}
-	// 		debug("Skończyłem myśleć");
-	// 		break;
-	// 	case InWant:
-	// 		println("Czekam na wejście do sekcji krytycznej")
-	// 			// tutaj zapewne jakiś muteks albo zmienna warunkowa
-	// 			// bo aktywne czekanie jest BUE
-	// 			if (ackCount == size - 1)
-	// 				changeState(InSection);
-	// 		break;
-	// 	case InSection:
-	// 		// tutaj zapewne jakiś muteks albo zmienna warunkowa
-	// 		println("Jestem w sekcji krytycznej")
-	// 			sleep(5);
-	// 		// if ( perc < 25 ) {
-	// 		debug("Perc: %d", perc);
-	// 		println("Wychodzę z sekcji krytyczneh")
-	// 			debug("Zmieniam stan na wysyłanie");
-	// 		packet_t *pkt = malloc(sizeof(packet_t));
-	// 		pkt->data = perc;
-	// 		for (int i = 0; i <= size - 1; i++)
-	// 			if (i != rank)
-	// 				sendPacket(pkt, (rank + 1) % size, RELEASE);
-	// 		changeState(InRun);
-	// 		free(pkt);
-	// 		//}
-	// 		break;
-	// 	default:
-	// 		break;
-	// 	}
-	// 	sleep(SEC_IN_STATE);
-	// }
+	srandom(time(NULL) + rank);
 	state_t_new previous_state = CANT_GO_DONT_WANT;
 	while (state_new != IN_FINISH)
 	{
-		sleep(1);
 		pthread_mutex_lock(&new_message_mut);
 		while (new_message == FALSE && state_new == previous_state)
 		{
@@ -87,6 +20,7 @@ void mainLoop()
 		{
 		case CANT_GO_DONT_WANT:
 		{
+			println("Ubiegam się o wejscie");
 			l_clock++;
 			packet_t *pkt = malloc(sizeof(packet_t));
 			pkt->data = m;
@@ -130,11 +64,12 @@ void mainLoop()
 					break;
 				}
 			}
-			if (req_count > S)
+			println("Sprawdzam warunki wejscia (req_count: %d, m_sum: %d)", req_count, m_sum);
+			if (req_count >= S)
 			{
 				break;
 			}
-			if (m_sum >= M - m)
+			if (m_sum > M - m)
 			{
 				break;
 			}
@@ -144,6 +79,7 @@ void mainLoop()
 		case CAN_GO:
 		{
 			debug("wchodze");
+			println("Sprawdzam czy trzeba wymienic przedstawiciela");
 			pthread_mutex_lock(&requests_mut);
 			x_without_us = x;
 			int m_sum = 0;
@@ -164,7 +100,9 @@ void mainLoop()
 			if (x_with_us <= X)
 			{
 				debug("jestem w srodku x ok");
+				println("Jestem w sekcji krytycznej nie wymieniam przedstawiciela");
 				sleep(random() % 5);
+				println("Opuszczam sekcje krytyczna");
 				pthread_mutex_lock(&l_clock_mut);
 				l_clock = l_clock + 1;
 				pthread_mutex_unlock(&l_clock_mut);
@@ -190,6 +128,7 @@ void mainLoop()
 			{
 				if (x_without_us < X)
 				{
+					println("Jestem w sekcji krytycznej wymieniam przedstawiciela");
 					debug("jestem w srodku wymieniam x");
 					sleep(random() % 5);
 					pthread_mutex_lock(&l_clock_mut);
@@ -202,8 +141,34 @@ void mainLoop()
 						sendPacket(pkt, i, REPLACE);
 					}
 					free(pkt);
+					sleep(random() % 5);
+					println("Opuszczam sekcje krytyczna");
+					pthread_mutex_lock(&l_clock_mut);
+					l_clock = l_clock + 1;
+					pthread_mutex_unlock(&l_clock_mut);
+					pkt = malloc(sizeof(packet_t));
+					pkt->data = m;
+					for (int i = 0; i <= size - 1; i++)
+					{
+						sendPacket(pkt, i, RELEASE);
+					}
+					free(pkt);
+					m += random() % max_random_m;
+					if (m > M)
+					{
+						changeStateNew(IN_FINISH);
+						debug("koncze");
+						println("Koncze dzialanie m za duze by wejsc");
+						break;
+					}
+					changeStateNew(CANT_GO_DONT_WANT);
+					debug("wychodze");
+					break;
 				}
-				break;
+				else
+				{
+					println("Ktos musi wymienic przedstawiciela");
+				}
 			}
 		}
 		}

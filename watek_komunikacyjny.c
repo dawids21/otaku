@@ -13,11 +13,9 @@ static int cmpfunc(const void *a, const void *b)
     return (*packet_a)->src - (*packet_b)->src;
 }
 
-/* wątek komunikacyjny; zajmuje się odbiorem i reakcją na komunikaty */
 void *startKomWatek(void *ptr)
 {
     MPI_Status status;
-    /* Obrazuje pętlę odbierającą pakiety o różnych typach */
     while (state_new != IN_FINISH)
     {
         pthread_mutex_lock(&new_message_mut);
