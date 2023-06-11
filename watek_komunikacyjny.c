@@ -87,6 +87,11 @@ void *startKomWatek(void *ptr)
         case REPLACE:
             x -= pkt->data;
             break;
+        case FINISH:
+            pthread_mutex_lock(&finished_mut);
+            finished[pkt->src] = 1;
+            pthread_mutex_unlock(&finished_mut);
+            break;
         }
         free(pkt);
         pthread_mutex_lock(&new_message_mut);

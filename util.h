@@ -30,7 +30,6 @@ typedef enum
     CAN_GO,
     IN_FINISH
 } state_t_new;
-extern state_t stan;
 extern state_t_new state_new;
 extern pthread_mutex_t stateMut;
 extern pthread_mutex_t l_clock_mut;
@@ -39,6 +38,7 @@ extern pthread_mutex_t requests_mut;
 extern pthread_mutex_t new_message_mut;
 extern pthread_cond_t new_message_cond;
 extern int new_message;
+extern pthread_mutex_t finished_mut;
 
 void changeStateNew(state_t_new);
 #endif

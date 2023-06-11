@@ -24,7 +24,8 @@ int S = 2;
 int max_random_m = 20;
 
 packet_t *requests[1000];
-int timestamps[1000];
+int timestamps[1000] = {0};
+int finished[1000] = {0};
 
 int requests_size = 0;
 
@@ -45,6 +46,7 @@ void finalizuj()
     pthread_mutex_destroy(&requests_mut);
     pthread_mutex_destroy(&new_message_mut);
     pthread_cond_destroy(&new_message_cond);
+    pthread_mutex_destroy(&finished_mut);
     println("czekam na wątek \"komunikacyjny\"\n");
     pthread_join(threadKom, NULL);
     MPI_Type_free(&MPI_PAKIET_T);

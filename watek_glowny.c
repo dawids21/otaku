@@ -36,15 +36,17 @@ void mainLoop()
 		{
 			debug("ubiegam sie o wejscie");
 			pthread_mutex_lock(&timestamps_mut);
+			pthread_mutex_lock(&requests_mut);
 			int should_break = FALSE;
 			for (int i = 0; i < size; i++)
 			{
-				if (i != rank && timestamps[i] <= l_clock_req)
+				if (i != rank && timestamps[i] <= l_clock_req && finished[i] == 0)
 				{
 					should_break = TRUE;
 					break;
 				}
 			}
+			pthread_mutex_unlock(&requests_mut);
 			pthread_mutex_unlock(&timestamps_mut);
 			if (should_break)
 			{
@@ -78,7 +80,6 @@ void mainLoop()
 		}
 		case CAN_GO:
 		{
-			debug("wchodze");
 			println("Sprawdzam czy trzeba wymienic przedstawiciela");
 			pthread_mutex_lock(&requests_mut);
 			x_without_us = x;
@@ -99,7 +100,6 @@ void mainLoop()
 			x_with_us = x_without_us + m;
 			if (x_with_us <= X)
 			{
-				debug("jestem w srodku x ok");
 				println("Jestem w sekcji krytycznej nie wymieniam przedstawiciela");
 				sleep(random() % 5);
 				println("Opuszczam sekcje krytyczna");
@@ -117,7 +117,7 @@ void mainLoop()
 				if (m > M)
 				{
 					changeStateNew(IN_FINISH);
-					debug("koncze");
+					println("Koncze dzialanie m za duze by wejsc");
 					break;
 				}
 				changeStateNew(CANT_GO_DONT_WANT);
@@ -129,7 +129,6 @@ void mainLoop()
 				if (x_without_us < X)
 				{
 					println("Jestem w sekcji krytycznej wymieniam przedstawiciela");
-					debug("jestem w srodku wymieniam x");
 					sleep(random() % 5);
 					pthread_mutex_lock(&l_clock_mut);
 					l_clock = l_clock + 1;
@@ -157,7 +156,6 @@ void mainLoop()
 					if (m > M)
 					{
 						changeStateNew(IN_FINISH);
-						debug("koncze");
 						println("Koncze dzialanie m za duze by wejsc");
 						break;
 					}
@@ -176,5 +174,14 @@ void mainLoop()
 		new_message = FALSE;
 		pthread_cond_signal(&new_message_cond);
 		pthread_mutex_unlock(&new_message_mut);
+	}
+	packet_t *pkt = malloc(sizeof(packet_t));
+	pkt->data = m;
+	for (int i = 0; i <= size - 1; i++)
+	{
+		if (i != rank)
+		{
+			sendPacket(pkt, i, FINISH);
+		}
 	}
 }

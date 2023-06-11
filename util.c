@@ -12,6 +12,7 @@ pthread_mutex_t requests_mut = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t new_message_mut = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t new_message_cond = PTHREAD_COND_INITIALIZER;
 int new_message = TRUE;
+pthread_mutex_t finished_mut = PTHREAD_MUTEX_INITIALIZER;
 
 struct tagNames_t
 {
