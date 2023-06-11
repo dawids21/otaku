@@ -126,7 +126,7 @@ void mainLoop()
 			}
 			else
 			{
-				if (x_without_us < X)
+				if (x_without_us <= X)
 				{
 					println("Jestem w sekcji krytycznej wymieniam przedstawiciela");
 					sleep(random() % 5);
