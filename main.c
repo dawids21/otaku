@@ -23,9 +23,9 @@ int X = 90;
 int S = 2;
 int max_random_m = 20;
 
-packet_t *requests[1000];
-int timestamps[1000] = {0};
-int finished[1000] = {0};
+packet_t *requests[100];
+int timestamps[100] = {0};
+int finished[100] = {0};
 
 int requests_size = 0;
 

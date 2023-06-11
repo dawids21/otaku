@@ -33,9 +33,9 @@ extern int X;
 extern int M;
 extern int S;
 extern int max_random_m;
-extern packet_t *requests[1000];
-extern int timestamps[1000];
-extern int finished[1000];
+extern packet_t *requests[100];
+extern int timestamps[100];
+extern int finished[100];
 
 extern int requests_size;
 
